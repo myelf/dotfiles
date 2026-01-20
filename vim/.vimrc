@@ -23,6 +23,12 @@ set signcolumn=yes
 set splitright
 set splitbelow
 
+
+nnoremap <leader>tn :tabnew<CR>
+nnoremap <leader>tl :tabnext<CR>
+nnoremap <leader>th :tabprevious<CR>
+
+
 " Tab 與縮排（你的設定）
 set tabstop=4
 set shiftwidth=4
@@ -36,7 +42,7 @@ set hlsearch
 set incsearch
 
 " 滑鼠（想保持純鍵盤可註解掉）
-set mouse=a
+set mouse=
 
 " 系統剪貼簿（你的設定，環境支援時啟用）
 if has('clipboard')
@@ -155,4 +161,5 @@ set background=dark
 " =========================
 " 你如果希望「本機設定蓋過通用設定」，把以下一行移到檔案最底
 " if filereadable(expand('~/.vimrc.local')) | source ~/.vimrc.local | endif
+
 
