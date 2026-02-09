@@ -39,7 +39,7 @@ syntax on
 " 搜尋（你的設定）
 set smartcase
 set hlsearch
-set incsearch
+" set incsearch
 
 " 滑鼠（想保持純鍵盤可註解掉）
 set mouse=
