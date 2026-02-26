@@ -1,10 +1,4 @@
 
-" =========================
-" 基本：本機覆寫（先載入）
-" =========================
-if filereadable(expand('~/.vimrc.local'))
-  source ~/.vimrc.local
-endif
 
 " 減少延遲感
 set updatetime=300
@@ -14,10 +8,10 @@ set timeoutlen=500
 " 介面 / 編輯體驗
 " =========================
 set number
-set cursorline
+"set cursorline
 set showcmd
 set showmatch
-set signcolumn=yes
+"set signcolumn=yes
 
 " 分割偏好（新垂直分割在右，新水平分割在下）
 set splitright
@@ -37,8 +31,9 @@ filetype plugin indent on
 syntax on
 
 " 搜尋（你的設定）
-set smartcase
+" set smartcase
 set hlsearch
+set lazyredraw
 " set incsearch
 
 " 滑鼠（想保持純鍵盤可註解掉）
@@ -112,7 +107,6 @@ Plug 'preservim/nerdtree'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-surround'
-Plug 'vim-airline/vim-airline'
 
 " === 建議但非必要（可取消註解啟用） ===
 " Plug 'tpope/vim-fugitive'        " Git 超好用
@@ -126,11 +120,6 @@ call plug#end()
 " Plugin 設定與快捷
 " =========================
 
-" --- Airline ---
-set laststatus=2
-let g:airline#extensions#tabline#enabled = 1
-" 若字型支援 powerline 符號可開啟
-" let g:airline_powerline_fonts = 1
 
 " --- NERDTree ---
 let g:NERDTreeShowHidden = 1
@@ -139,14 +128,14 @@ nnoremap <leader>e :NERDTreeToggle<CR>
 
 " --- FZF ---
 " 使用 ripgrep 作為預設搜尋（若存在）；否則 fallback
-if executable('rg')
-  let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
-  command! -nargs=* Rg call fzf#vim#grep(
-        \ 'rg --column --line-number --no-heading --color=always --smart-case --hidden --glob "!.git/*" '.shellescape(<q-args>),
-        \ 1, fzf#vim#with_preview(), 0)
-elseif executable('fd')
-  let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --exclude .git'
-endif
+" if executable('rg')
+"   let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
+"   command! -nargs=* Rg call fzf#vim#grep(
+"         \ 'rg --column --line-number --no-heading --color=always --smart-case --hidden --glob "!.git/*" '.shellescape(<q-args>),
+"         \ 1, fzf#vim#with_preview(), 0)
+" elseif executable('fd')
+"   let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --exclude .git'
+" endif
 nnoremap <leader>ff :Files<CR>
 nnoremap <leader>fg :Rg<Space>
 
@@ -163,3 +152,9 @@ set background=dark
 " if filereadable(expand('~/.vimrc.local')) | source ~/.vimrc.local | endif
 
 
+" =========================
+" 基本：本機覆寫（先載入）
+" =========================
+if filereadable(expand('~/.vimrc.local'))
+  source ~/.vimrc.local
+endif
