@@ -81,7 +81,7 @@ endfunction
 " =========================
 " Leader 與常用快捷
 " =========================
-let mapleader = " "
+" let mapleader = " "
 
 " 儲存／離開／取消搜尋高亮
 nnoremap <leader>w :w<CR>
