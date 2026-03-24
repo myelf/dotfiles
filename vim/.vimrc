@@ -92,8 +92,7 @@ nnoremap <leader>/ :nohlsearch<CR>
 " 自動安裝 vim-plug（無需手動）
 " =========================
 if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   autocmd VimEnter * ++once PlugInstall --sync | source $MYVIMRC
 endif
 
