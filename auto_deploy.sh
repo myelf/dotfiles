@@ -6,23 +6,22 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-NAS_IP="192.168.50.250"
-NAS_PATH="/volume1/NFS"  # 請確認 Synology 的實際路徑
-LOCAL_MOUNT="/rhome"
+echo ">>> 開始佈署 LDAP 認證 (家目錄設為本地端 /home/\$USER) <<<"
 
-echo ">>> 開始佈署 LDAP 認證與 FSTAB 靜態掛載 (Path: $LOCAL_MOUNT) <<<"
-
-# 1. 安裝必要套件與移除 autofs
-echo "1/5 安裝軟體包並清理舊環境..."
+# 1. 安裝必要套件與清理舊環境
+# 移除 nfs-common，因為不再需要掛載遠端磁碟
+echo "1/4 安裝軟體包並清理舊環境..."
 apt update -qq
-apt install -y nfs-common sssd sssd-tools libnss-sss libpam-sss > /dev/null
+apt install -y sssd sssd-tools libnss-sss libpam-sss > /dev/null
+
+# 停止並移除可能干擾的 autofs
 systemctl stop autofs 2>/dev/null
 systemctl disable autofs 2>/dev/null
-# 徹底封印 autofs 以免干擾
 systemctl mask autofs 2>/dev/null
 
 # 2. 配置 SSSD (身份認證與 Shell/Home 覆蓋)
-echo "2/5 設定 SSSD 與 LDAP 參數..."
+# 將 override_homedir 設定為本地端的 /home/%u
+echo "2/4 設定 SSSD 與 LDAP 參數..."
 cat <<EOF > /etc/sssd/sssd.conf
 [sssd]
 services = nss, pam
@@ -43,51 +42,36 @@ ldap_tls_reqcert = never
 cache_credentials = true
 enumerate = true
 
-# 強制使用 Bash 並指定掛載點路徑
+# 強制使用 Bash 並將家目錄設為本地 /home/%u
 override_shell = /bin/bash
-override_homedir = $LOCAL_MOUNT/%u
+override_homedir = /home/%u
 EOF
 
 # 強制 SSSD 權限規範
 chmod 600 /etc/sssd/sssd.conf
 chown root:root /etc/sssd/sssd.conf
 
-# 3. 配置 /etc/fstab (取代 AutoFS)
-echo "3/5 配置 /etc/fstab 掛載規則..."
-# 建立本地掛載點目錄
-mkdir -p $LOCAL_MOUNT
-
-# 檢查是否已存在相同的掛載規則，若無則加入
-FSTAB_ENTRY="$NAS_IP:$NAS_PATH $LOCAL_MOUNT nfs _netdev,rw,soft,intr,x-systemd.automount,x-systemd.idle-timeout=600 0 0"
-if ! grep -q "$LOCAL_MOUNT" /etc/fstab; then
-    echo "$FSTAB_ENTRY" >> /etc/fstab
-    echo "已成功加入 fstab。"
-else
-    echo "fstab 中已存在 $LOCAL_MOUNT 的規則，跳過修改。"
-fi
-
-# 4. 啟用自動建立家目錄 (PAM)
-# 雖然我們建議手動預建，但保留此功能作為後援
-echo "4/5 修正 PAM 階段設定..."
+# 3. 啟用自動建立本地家目錄 (PAM)
+# 這是本地端存儲模式最重要的部分，確保登入時自動 mkdir
+echo "3/4 配置 PAM 自動建立家目錄..."
 if ! grep -q "pam_mkhomedir.so" /etc/pam.d/common-session; then
     echo "session required    pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> /etc/pam.d/common-session
 fi
 
-# 5. 清理舊資料並重啟服務
-echo "5/5 重新載入系統設定並重啟 SSSD..."
+# 4. 清理舊資料並重啟服務
+echo "4/4 重新載入系統設定並重啟 SSSD..."
 systemctl stop sssd
+# 徹底刪除舊的 LDAP 帳號快取資料庫
 rm -f /var/lib/sss/db/*
 rm -f /var/lib/sss/mc/*
 
-# 重新載入 systemd 以識別新的 fstab 選項
 systemctl daemon-reload
 systemctl restart sssd
 systemctl enable sssd
 
-# 觸發掛載
-mount -a
-
 echo "--------------------------------------------------"
 echo "佈署完成！"
-echo "本地掛載點：$LOCAL_MOUNT"
-echo "測試方式：輸入 'getent passwd [LDAP帳號]' 確認 Home 路徑為 $
+echo "所有 LDAP 帳號將使用本地儲存空間：/home/$USER"
+echo "測試方式：輸入 'getent passwd [LDAP帳號]' 確認路徑正確"
+echo "測試登入：'su - [LDAP帳號]'，系統應會自動建立本地資料夾"
+echo "--------------------------------------------------"
